@@ -27,11 +27,15 @@ def serialize_tag(tag):
     }
 
 
+def get_likes_count(post):
+    return post.likes.count()
+
+
 def index(request):
-    posts = Post.objects.all().prefetch_related('likes')
+    posts = Post.objects.all()
     sorted_posts = sorted(
         posts,
-        key=lambda post: post.likes.count(),
+        key=get_likes_count,
         reverse=True
     )
     most_popular_posts = sorted_posts[:5]
