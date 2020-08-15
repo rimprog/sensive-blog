@@ -57,21 +57,18 @@ def temporary_add_comments_to_posts(posts):
 
 
 def index(request):
-    posts_ordered_by_likes = Post.objects.annotate(likes_count=Count('likes')).prefetch_related('author').order_by('-likes_count')
-    posts_ordered_by_likes_with_comments = temporary_add_comments_to_posts(posts_ordered_by_likes)
-    most_popular_posts = posts_ordered_by_likes_with_comments[:5]
+    most_popular_posts = Post.objects.annotate(likes_count=Count('likes')).prefetch_related('author').order_by('-likes_count')[:5]
+    most_popular_posts_with_comments = temporary_add_comments_to_posts(most_popular_posts)
 
-
-    posts_ordered_by_published_at = posts_ordered_by_likes.order_by('-published_at')
-    posts_ordered_by_published_at_with_comments = temporary_add_comments_to_posts(posts_ordered_by_published_at)
-    most_fresh_posts = posts_ordered_by_published_at_with_comments[:5]
+    most_fresh_posts = Post.objects.prefetch_related('author').order_by('-published_at')[:5]
+    most_fresh_posts_with_comments = temporary_add_comments_to_posts(most_fresh_posts)
 
     tags = Tag.objects.annotate(posts_count=Count('posts'))
     most_popular_tags = tags.order_by('-posts_count')[:5]
 
     context = {
-        'most_popular_posts': [serialize_post_optimized(post) for post in most_popular_posts],
-        'page_posts': [serialize_post_optimized(post) for post in most_fresh_posts],
+        'most_popular_posts': [serialize_post_optimized(post) for post in most_popular_posts_with_comments],
+        'page_posts': [serialize_post_optimized(post) for post in most_fresh_posts_with_comments],
         'popular_tags': [serialize_tag(tag) for tag in most_popular_tags],
     }
     return render(request, 'index.html', context)
